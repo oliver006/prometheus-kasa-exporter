@@ -17,6 +17,29 @@ Scrape one target:
 curl 'http://localhost:9233/scrape?target=kasa-plug-office'
 ```
 
+Device metrics use `target` and `device` labels. `device="parent"` is the
+scraped device itself; power strip and multi-outlet children use their stable
+child device ID. Human-readable names, models, firmware, hardware version, MAC,
+and region are exposed only on `_info` metrics.
+
+The exporter follows Prometheus naming conventions: time values are seconds,
+energy is joules, voltage is volts, current is amperes, power is watts, and
+percentage-like values are exported as ratios from 0 to 1.
+
+Device scrape metrics include, when supported by the device:
+
+- State, scrape health, device metadata, firmware metadata, clock timestamp,
+  clock offset, RSSI, signal level, cloud connectivity, LED state, child lock,
+  overheat and overload state, auto-off settings, and power protection settings.
+- Energy-monitoring plug data: instantaneous power, voltage, current, energy
+  today, energy this month, energy since reboot, and runtime today/this month.
+- Light and dimmer data: brightness, color temperature, HSV components, active
+  light effect, active light preset, light strip length, smooth transition
+  settings, dimmer fade/gentle/ramp settings.
+- Motion and ambient-light data: PIR enabled/triggered/range, PIR threshold,
+  PIR values, PIR ADC readings, ambient-light enabled state, and ambient-light
+  level.
+
 Exporter self-metrics:
 
 ```sh
