@@ -852,10 +852,10 @@ def enum_label_value(value: Any) -> str:
     return str(enum_value if enum_value is not None else value)
 
 
-def device_metric_id(device: Any) -> str:
+def device_metric_id(device: Any) -> str | None:
     parent = safe_getattr(device, "parent", None)
     if parent is None:
-        return "parent"
+        return None
 
     device_id = safe_getattr(device, "device_id", "")
     if device_id:
@@ -870,10 +870,11 @@ def device_metric_id(device: Any) -> str:
 
 
 def common_device_labels(target: str, device: Any) -> dict[str, str]:
-    return {
-        "target": target,
-        "device": device_metric_id(device),
-    }
+    label_values = {"target": target}
+    device_id = device_metric_id(device)
+    if device_id is not None:
+        label_values["device"] = device_id
+    return label_values
 
 
 def device_info_labels(target: str, device: Any) -> dict[str, Any]:
@@ -887,19 +888,25 @@ def device_info_labels(target: str, device: Any) -> dict[str, Any]:
     firmware_build = safe_getattr(device_info, "firmware_build", "")
     region = safe_getattr(device_info, "region", "")
 
-    return {
-        "target": target,
-        "device": device_metric_id(device),
-        "alias": safe_getattr(device, "alias", ""),
-        "model": safe_getattr(device, "model", ""),
-        "device_type": enum_label_value(safe_getattr(device, "device_type", "")),
-        "device_id": safe_getattr(device, "device_id", ""),
-        "mac": safe_getattr(device, "mac", ""),
-        "hardware_version": hardware_version or hw_info.get("hw_ver", ""),
-        "firmware_version": firmware_version or hw_info.get("sw_ver", ""),
-        "firmware_build": firmware_build or "",
-        "region": region or "",
-    }
+    label_values: dict[str, Any] = {"target": target}
+    device_id = device_metric_id(device)
+    if device_id is not None:
+        label_values["device"] = device_id
+
+    label_values.update(
+        {
+            "alias": safe_getattr(device, "alias", ""),
+            "model": safe_getattr(device, "model", ""),
+            "device_type": enum_label_value(safe_getattr(device, "device_type", "")),
+            "device_id": safe_getattr(device, "device_id", ""),
+            "mac": safe_getattr(device, "mac", ""),
+            "hardware_version": hardware_version or hw_info.get("hw_ver", ""),
+            "firmware_version": firmware_version or hw_info.get("sw_ver", ""),
+            "firmware_build": firmware_build or "",
+            "region": region or "",
+        }
+    )
+    return label_values
 
 
 def iter_scraped_devices(device: Any) -> list[Any]:
@@ -1117,7 +1124,6 @@ async def scrape_target(target: str, config: ExporterConfig) -> ScrapeResult:
                 "kasa_device_scrape_success",
                 1,
                 target=target,
-                device="parent",
             )
         )
         for scraped_device in iter_scraped_devices(device):
@@ -1133,7 +1139,6 @@ async def scrape_target(target: str, config: ExporterConfig) -> ScrapeResult:
                 "kasa_device_scrape_success",
                 0,
                 target=target,
-                device="parent",
             )
         )
     finally:
@@ -1149,7 +1154,6 @@ async def scrape_target(target: str, config: ExporterConfig) -> ScrapeResult:
             "kasa_device_scrape_duration_seconds",
             duration,
             target=target,
-            device="parent",
         )
     )
     return ScrapeResult("\n".join(lines) + "\n", success, duration)

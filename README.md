@@ -17,10 +17,10 @@ Scrape one target:
 curl 'http://localhost:9233/scrape?target=kasa-plug-office'
 ```
 
-Device metrics use `target` and `device` labels. `device="parent"` is the
-scraped device itself; power strip and multi-outlet children use their stable
-child device ID. Human-readable names, models, firmware, hardware version, MAC,
-and region are exposed only on `_info` metrics.
+Device metrics use a `target` label for the scraped device. Power strip and
+multi-outlet children also include a `device` label with their stable child
+device ID. Human-readable names, models, firmware, hardware version, MAC, and
+region are exposed only on `_info` metrics.
 
 The exporter follows Prometheus naming conventions: time values are seconds,
 energy is joules, voltage is volts, current is amperes, power is watts, and
